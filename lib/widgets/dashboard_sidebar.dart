@@ -25,126 +25,124 @@ class _DashboardSidebarState extends State<DashboardSidebar> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      height: double.infinity,
       color: const Color(0xFF151A23),
-      child: SafeArea(
-        child: Column(
-          children: [
-            _buildLogo(),
-
-            const Divider(height: 1, color: Color(0xFF252C38)),
-
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 9,
-                  vertical: 12,
-                ),
-                child: Column(
-                  children: [
-                    _buildDashboardItem(),
-
-                    const SizedBox(height: 10),
-
-                    ...ServiceRoutes.groups.map(_buildServiceGroup),
-                  ],
-                ),
+      child: Column(
+        children: [
+          _buildBrand(),
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.symmetric(
+                horizontal: widget.expanded ? 12 : 8,
+                vertical: 12,
+              ),
+              child: Column(
+                children: [...ServiceRoutes.groups.map(_buildServiceGroup)],
               ),
             ),
-
-            _buildSignOut(),
-          ],
-        ),
+          ),
+          _buildSignOut(),
+        ],
       ),
     );
   }
 
-  Widget _buildLogo() {
-    return SizedBox(
+  Widget _buildBrand() {
+    return Container(
       height: 72,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: widget.expanded ? 16 : 12),
-        child: Row(
-          children: [
-            Container(
-              width: 39,
-              height: 39,
-              decoration: BoxDecoration(
-                color: const Color(0xFF26303D),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.cloud_outlined,
-                color: Color(0xFFCBD5E1),
-                size: 22,
-              ),
-            ),
-
-            if (widget.expanded) ...[
-              const SizedBox(width: 11),
-              const Expanded(
-                child: Text(
-                  'ONE CLOUD\nENTERPRISE PLATFORM',
-                  maxLines: 2,
-                  style: TextStyle(
-                    color: Color(0xFFE5E7EB),
-                    fontSize: 11,
-                    height: 1.25,
-                    fontWeight: FontWeight.w800,
+      padding: EdgeInsets.symmetric(horizontal: widget.expanded ? 16 : 12),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0xFF29313D))),
+      ),
+      child: widget.expanded
+          ? Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF2563EB), Color(0xFF60A5FA)],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.cloud_outlined,
+                    color: Colors.white,
+                    size: 21,
                   ),
                 ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'ONE CLOUD\nENTERPRISE PLATFORM',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      height: 1.25,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : Center(
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2563EB), Color(0xFF60A5FA)],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.cloud_outlined,
+                  color: Colors.white,
+                  size: 21,
+                ),
               ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDashboardItem() {
-    return _mainItem(
-      icon: Icons.dashboard_outlined,
-      title: 'Dashboard',
-      selected: widget.selectedPage == 'Dashboard',
-      onTap: () {
-        widget.onPageSelected('Dashboard');
-      },
+            ),
     );
   }
 
   Widget _buildServiceGroup(ServiceGroup group) {
-    final bool groupSelected = widget.selectedPage == group.title;
+    final isSelected = widget.selectedPage == group.title;
+    final isExpanded = expandedServices.contains(group.title);
 
-    final bool childSelected = group.items.any(
-      (item) => item.title == widget.selectedPage,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 5),
+      child: Column(
+        children: [
+          _groupButton(
+            group: group,
+            selected: isSelected,
+            expanded: isExpanded,
+          ),
+          if (widget.expanded && isExpanded)
+            Padding(
+              padding: const EdgeInsets.only(left: 12, top: 4, bottom: 4),
+              child: Column(children: group.items.map(_buildSubItem).toList()),
+            ),
+        ],
+      ),
     );
+  }
 
-    final bool isOpen =
-        widget.expanded && expandedServices.contains(group.title);
-
-    return Column(
-      children: [
-        _mainItem(
-          icon: group.icon,
-          title: group.title,
-          selected: groupSelected || childSelected,
-          trailing: widget.expanded
-              ? Icon(
-                  isOpen
-                      ? Icons.keyboard_arrow_down
-                      : Icons.keyboard_arrow_right,
-                  color: const Color(0xFF7F8A9D),
-                  size: 19,
-                )
-              : null,
-          onTap: () {
-            if (!widget.expanded) {
-              widget.onPageSelected(group.title);
-              return;
-            }
-
+  Widget _groupButton({
+    required ServiceGroup group,
+    required bool selected,
+    required bool expanded,
+  }) {
+    return Material(
+      color: selected ? const Color(0xFF1E3A5F) : Colors.transparent,
+      borderRadius: BorderRadius.circular(9),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(9),
+        onTap: () {
+          if (widget.expanded) {
             setState(() {
               if (expandedServices.contains(group.title)) {
                 expandedServices.remove(group.title);
@@ -152,77 +150,46 @@ class _DashboardSidebarState extends State<DashboardSidebar> {
                 expandedServices.add(group.title);
               }
             });
+          }
 
-            widget.onPageSelected(group.title);
-          },
-        ),
-
-        if (isOpen)
-          Padding(
-            padding: const EdgeInsets.only(left: 17, right: 3),
-            child: Column(
-              children: group.items.map((item) {
-                return _subItem(item, widget.selectedPage == item.title);
-              }).toList(),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _mainItem({
-    required IconData icon,
-    required String title,
-    required bool selected,
-    required VoidCallback onTap,
-    Widget? trailing,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+          widget.onPageSelected(group.title);
+        },
+        child: Container(
           height: 46,
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(horizontal: widget.expanded ? 11 : 0),
-          decoration: BoxDecoration(
-            color: selected ? const Color(0xFF273444) : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
+          padding: EdgeInsets.symmetric(horizontal: widget.expanded ? 12 : 0),
           child: Row(
             mainAxisAlignment: widget.expanded
                 ? MainAxisAlignment.start
                 : MainAxisAlignment.center,
             children: [
               Icon(
-                icon,
-                color: selected
-                    ? const Color(0xFFE5E7EB)
-                    : const Color(0xFF9CA3AF),
+                group.icon,
                 size: 20,
+                color: selected
+                    ? const Color(0xFF60A5FA)
+                    : const Color(0xFF94A3B8),
               ),
-
               if (widget.expanded) ...[
                 const SizedBox(width: 11),
-
                 Expanded(
                   child: Text(
-                    title,
+                    group.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: selected
-                          ? const Color(0xFFF3F4F6)
-                          : const Color(0xFFC4CBD5),
-                      fontSize: 14,
+                      color: selected ? Colors.white : const Color(0xFFD1D5DB),
+                      fontSize: 11,
                       fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),
                 ),
-
-                if (trailing != null) trailing,
+                Icon(
+                  expanded
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                  color: const Color(0xFF64748B),
+                ),
               ],
             ],
           ),
@@ -231,48 +198,47 @@ class _DashboardSidebarState extends State<DashboardSidebar> {
     );
   }
 
-  Widget _subItem(ServiceItem item, bool selected) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(7),
-        onTap: () {
-          widget.onPageSelected(item.title);
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
-          margin: const EdgeInsets.only(bottom: 2),
-          decoration: BoxDecoration(
-            color: selected ? const Color(0xFF222B38) : Colors.transparent,
-            borderRadius: BorderRadius.circular(7),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                item.icon,
-                color: selected
-                    ? const Color(0xFFDCE3EC)
-                    : const Color(0xFF7F8A9D),
-                size: 16,
-              ),
-              const SizedBox(width: 9),
-              Expanded(
-                child: Text(
-                  item.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: selected
-                        ? const Color(0xFFE5E7EB)
-                        : const Color(0xFFAEB7C5),
-                    fontSize: 13,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+  Widget _buildSubItem(ServiceItem item) {
+    final selected = widget.selectedPage == item.title;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 3),
+      child: Material(
+        color: selected ? const Color(0xFF202B3B) : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () {
+            widget.onPageSelected(item.title);
+          },
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 40),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            child: Row(
+              children: [
+                Icon(
+                  item.icon,
+                  size: 17,
+                  color: selected
+                      ? const Color(0xFF60A5FA)
+                      : const Color(0xFF7F8A9A),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    item.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: selected ? Colors.white : const Color(0xFFB8C1CE),
+                      fontSize: 10,
+                      height: 1.25,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -281,14 +247,15 @@ class _DashboardSidebarState extends State<DashboardSidebar> {
 
   Widget _buildSignOut() {
     return Container(
-      padding: EdgeInsets.all(widget.expanded ? 11 : 9),
+      padding: EdgeInsets.all(widget.expanded ? 12 : 8),
       decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: Color(0xFF252C38))),
+        border: Border(top: BorderSide(color: Color(0xFF29313D))),
       ),
       child: Material(
         color: Colors.transparent,
+        borderRadius: BorderRadius.circular(9),
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(9),
           onTap: () {
             Navigator.pushNamedAndRemoveUntil(
               context,
@@ -298,23 +265,26 @@ class _DashboardSidebarState extends State<DashboardSidebar> {
           },
           child: Container(
             height: 44,
-            padding: EdgeInsets.symmetric(horizontal: widget.expanded ? 11 : 0),
+            padding: EdgeInsets.symmetric(horizontal: widget.expanded ? 12 : 0),
             child: Row(
               mainAxisAlignment: widget.expanded
                   ? MainAxisAlignment.start
                   : MainAxisAlignment.center,
               children: [
-                const Icon(Icons.logout, color: Color(0xFFF87171), size: 20),
-
+                const Icon(
+                  Icons.logout_rounded,
+                  color: Color(0xFFF87171),
+                  size: 19,
+                ),
                 if (widget.expanded) ...[
                   const SizedBox(width: 11),
                   const Expanded(
                     child: Text(
                       'Sign Out',
                       style: TextStyle(
-                        color: Color(0xFFF87171),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                        color: Color(0xFFE5E7EB),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),

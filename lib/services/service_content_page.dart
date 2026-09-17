@@ -1,199 +1,244 @@
 import 'package:flutter/material.dart';
 
-import '../routes/service_routes.dart';
-
 class ServiceContentPage extends StatelessWidget {
   final String page;
 
   const ServiceContentPage({super.key, required this.page});
 
-  ServiceGroup? get group {
-    for (final service in ServiceRoutes.groups) {
-      if (service.title == page) {
-        return service;
-      }
-
-      for (final item in service.items) {
-        if (item.title == page) {
-          return service;
-        }
-      }
-    }
-
-    return null;
-  }
-
-  ServiceItem? get item {
-    final service = group;
-
-    if (service == null) {
-      return null;
-    }
-
-    for (final child in service.items) {
-      if (child.title == page) {
-        return child;
-      }
-    }
-
-    return null;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final service = group;
+    final data = _serviceData[page] ?? _defaultData(page);
 
-    if (service == null) {
-      return _notFound();
-    }
-
-    final selectedItem = item;
-
-    if (selectedItem == null) {
-      return _serviceOverview(context, service);
-    }
-
-    return _module(service, selectedItem);
-  }
-
-  Widget _serviceOverview(BuildContext context, ServiceGroup service) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _hero(service.title, 'Enterprise service domain', service.icon),
-        const SizedBox(height: 20),
-        _descriptionCard(
-          'Service Overview',
-          _serviceDescription(service.title),
-          Icons.info_outline,
-        ),
-        const SizedBox(height: 20),
-        _modules(service),
-        const SizedBox(height: 20),
-        _cloudCapabilities(service.title),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _hero(context, data),
+            const SizedBox(height: 20),
+            _metrics(context, data),
+            const SizedBox(height: 20),
+            _mainSection(context, data, constraints.maxWidth),
+            const SizedBox(height: 20),
+            _activitySection(context, data, constraints.maxWidth),
+            const SizedBox(height: 20),
+            _resourceSection(context, data, constraints.maxWidth),
+            const SizedBox(height: 20),
+            _tableSection(context, data),
+            const SizedBox(height: 20),
+          ],
+        );
+      },
     );
   }
 
-  Widget _module(ServiceGroup service, ServiceItem item) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _hero(item.title, '${service.title}  •  Module', item.icon),
-        const SizedBox(height: 20),
-        _statusCards(),
-        const SizedBox(height: 20),
-        _descriptionCard(
-          'Module Overview',
-          _moduleDescription(item.title),
-          Icons.info_outline,
-        ),
-        const SizedBox(height: 20),
-        _descriptionCard(
-          'Core Capabilities',
-          '',
-          Icons.checklist_outlined,
-          child: Column(
-            children: _capabilities(item.title).map(_bullet).toList(),
-          ),
-        ),
-        const SizedBox(height: 20),
-        _cloudCapabilities(service.title),
-      ],
-    );
-  }
-
-  Widget _hero(String title, String subtitle, IconData icon) {
+  Widget _hero(BuildContext context, Map<String, dynamic> data) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF172B4D), Color(0xFF2563EB)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF172B4D), Color(0xFF263F67)],
         ),
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(18),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.13),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: Colors.white, size: 28),
-          ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 650) {
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 23,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  subtitle,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
-                ),
+                _heroInfo(data),
+                const SizedBox(height: 20),
+                _statusBadge(data),
               ],
-            ),
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(child: _heroInfo(data)),
+              _statusBadge(data),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _heroInfo(Map<String, dynamic> data) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: const Color(0xFF2E466A),
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: Icon(data['icon'], color: const Color(0xFFE2E8F0), size: 27),
+        ),
+        const SizedBox(width: 15),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                data['title'],
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 23,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                data['description'],
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFFCBD5E1),
+                  fontSize: 12,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _statusBadge(Map<String, dynamic> data) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E334F),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF3B516E)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.check_circle, color: Color(0xFF86EFAC), size: 17),
+          const SizedBox(width: 7),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                data['status'],
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                data['availability'],
+                style: const TextStyle(color: Color(0xFFAFC0D3), fontSize: 9),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _statusCards() {
-    return Wrap(
-      spacing: 14,
-      runSpacing: 14,
-      children: [
-        _status('Status', 'Operational', Icons.check_circle_outline),
-        _status('API', 'Ready', Icons.api_outlined),
-        _status('Security', 'RBAC', Icons.security_outlined),
-        _status('Audit', 'Enabled', Icons.fact_check_outlined),
-      ],
+  Widget _metrics(BuildContext context, Map<String, dynamic> data) {
+    final metrics = data['metrics'] as List<dynamic>;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 1200
+            ? 4
+            : constraints.maxWidth >= 700
+            ? 2
+            : 1;
+
+        return Wrap(
+          spacing: 14,
+          runSpacing: 14,
+          children: metrics.map((metric) {
+            final width =
+                (constraints.maxWidth - (14 * (columns - 1))) / columns;
+
+            return SizedBox(width: width, child: _metricCard(metric));
+          }).toList(),
+        );
+      },
     );
   }
 
-  Widget _status(String title, String value, IconData icon) {
+  Widget _metricCard(Map<String, dynamic> metric) {
     return Container(
-      width: 220,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(11),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(.025),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF2563EB), size: 22),
-          const SizedBox(width: 10),
+          Container(
+            width: 43,
+            height: 43,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              metric['icon'],
+              color: const Color(0xFF64748B),
+              size: 21,
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  metric['title'],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Color(0xFF64748B),
                     fontSize: 10,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
-                  value,
+                  metric['value'],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Color(0xFF172B4D),
-                    fontSize: 13,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  metric['change'],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF15803D),
+                    fontSize: 9,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -205,69 +250,246 @@ class ServiceContentPage extends StatelessWidget {
     );
   }
 
-  Widget _modules(ServiceGroup service) {
-    return _descriptionCard(
-      'Available Modules',
-      '',
-      Icons.apps_outlined,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          int columns = 1;
+  Widget _mainSection(
+    BuildContext context,
+    Map<String, dynamic> data,
+    double width,
+  ) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 850) {
+          return Column(
+            children: [
+              _overviewCard(data),
+              const SizedBox(height: 16),
+              _healthCard(data),
+            ],
+          );
+        }
 
-          if (constraints.maxWidth >= 950) {
-            columns = 3;
-          } else if (constraints.maxWidth >= 600) {
-            columns = 2;
-          }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(flex: 3, child: _overviewCard(data)),
+            const SizedBox(width: 16),
+            Expanded(flex: 2, child: _healthCard(data)),
+          ],
+        );
+      },
+    );
+  }
 
-          const spacing = 13.0;
+  Widget _overviewCard(Map<String, dynamic> data) {
+    return _card(
+      title: 'Service Overview',
+      subtitle: 'Current operational and platform information',
+      icon: Icons.dashboard_customize_outlined,
+      child: Column(
+        children: [
+          _infoRow('Environment', data['environment'], Icons.layers_outlined),
+          _divider(),
+          _infoRow('Owner', data['owner'], Icons.person_outline),
+          _divider(),
+          _infoRow('Region', data['region'], Icons.public_outlined),
+          _divider(),
+          _infoRow('Version', data['version'], Icons.new_releases_outlined),
+          _divider(),
+          _infoRow(
+            'Last Deployment',
+            data['deployment'],
+            Icons.rocket_launch_outlined,
+          ),
+        ],
+      ),
+    );
+  }
 
-          final width =
-              (constraints.maxWidth - ((columns - 1) * spacing)) / columns;
+  Widget _healthCard(Map<String, dynamic> data) {
+    return _card(
+      title: 'Service Health',
+      subtitle: 'Live operational indicators',
+      icon: Icons.monitor_heart_outlined,
+      child: Column(
+        children: [
+          _healthIndicator('Availability', data['availability'], 0.999),
+          const SizedBox(height: 17),
+          _healthIndicator('Performance', '98.4%', 0.984),
+          const SizedBox(height: 17),
+          _healthIndicator('Reliability', '99.8%', 0.998),
+          const SizedBox(height: 17),
+          _healthIndicator('Capacity', '72%', 0.72),
+        ],
+      ),
+    );
+  }
 
-          return Wrap(
-            spacing: spacing,
-            runSpacing: spacing,
-            children: service.items.map((child) {
-              return SizedBox(
-                width: width,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(10),
-                  onTap: () {
-                    Navigator.pushReplacementNamed(context, child.route);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          child.icon,
-                          color: const Color(0xFF2563EB),
-                          size: 21,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            child.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Color(0xFF172B4D),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+  Widget _healthIndicator(String title, String value, double progress) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: Color(0xFF475569),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Color(0xFF172B4D),
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 7),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 7,
+            backgroundColor: const Color(0xFFE5E7EB),
+            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF64748B)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _activitySection(
+    BuildContext context,
+    Map<String, dynamic> data,
+    double width,
+  ) {
+    return _card(
+      title: 'Service Activity',
+      subtitle: 'Recent events and operational changes',
+      icon: Icons.timeline_outlined,
+      child: Column(
+        children: [
+          _activity(
+            Icons.check_circle_outline,
+            data['activity1'],
+            data['activity1Detail'],
+            'Just now',
+          ),
+          _divider(),
+          _activity(
+            Icons.rocket_launch_outlined,
+            data['activity2'],
+            data['activity2Detail'],
+            '18 min ago',
+          ),
+          _divider(),
+          _activity(
+            Icons.security_outlined,
+            data['activity3'],
+            data['activity3Detail'],
+            '42 min ago',
+          ),
+          _divider(),
+          _activity(
+            Icons.settings_outlined,
+            data['activity4'],
+            data['activity4Detail'],
+            '2 hours ago',
+          ),
+          _divider(),
+          _activity(
+            Icons.backup_outlined,
+            data['activity5'],
+            data['activity5Detail'],
+            '4 hours ago',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _activity(IconData icon, String title, String subtitle, String time) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(icon, color: const Color(0xFF64748B), size: 18),
+          ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF374151),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-              );
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Color(0xFF6B7280), fontSize: 9),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            time,
+            style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 9),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _resourceSection(
+    BuildContext context,
+    Map<String, dynamic> data,
+    double width,
+  ) {
+    final resources = data['resources'] as List<dynamic>;
+
+    return _card(
+      title: 'Resources & Components',
+      subtitle: 'Infrastructure components associated with this service',
+      icon: Icons.dns_outlined,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final columns = constraints.maxWidth >= 1000
+              ? 3
+              : constraints.maxWidth >= 650
+              ? 2
+              : 1;
+
+          return Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: resources.map((resource) {
+              final itemWidth =
+                  (constraints.maxWidth - (12 * (columns - 1))) / columns;
+
+              return SizedBox(width: itemWidth, child: _resourceCard(resource));
             }).toList(),
           );
         },
@@ -275,541 +497,492 @@ class ServiceContentPage extends StatelessWidget {
     );
   }
 
-  Widget _cloudCapabilities(String service) {
-    return _descriptionCard(
-      'Cloud Platform Capabilities',
-      'Provider-neutral cloud capabilities that can support $service.',
-      Icons.cloud_outlined,
-      child: Wrap(
-        spacing: 9,
-        runSpacing: 9,
-        children: _cloudItems(service)
-            .map(
-              (text) => Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 9,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  text,
+  Widget _resourceCard(Map<String, dynamic> resource) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          Icon(resource['icon'], color: const Color(0xFF64748B), size: 22),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  resource['title'],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: Color(0xFF1D4ED8),
-                    fontSize: 11,
+                    color: Color(0xFF475569),
+                    fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
-            )
-            .toList(),
+                const SizedBox(height: 4),
+                Text(
+                  resource['value'],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF172B4D),
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  resource['status'],
+                  style: const TextStyle(
+                    color: Color(0xFF15803D),
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _descriptionCard(
-    String title,
-    String description,
-    IconData icon, {
-    Widget? child,
+  Widget _tableSection(BuildContext context, Map<String, dynamic> data) {
+    final rows = data['table'] as List<dynamic>;
+
+    return _card(
+      title: data['tableTitle'],
+      subtitle: data['tableSubtitle'],
+      icon: Icons.table_chart_outlined,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 720),
+          child: DataTable(
+            headingRowHeight: 46,
+            dataRowMinHeight: 54,
+            dataRowMaxHeight: 68,
+            columnSpacing: 30,
+            horizontalMargin: 8,
+            headingTextStyle: const TextStyle(
+              color: Color(0xFF64748B),
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+            ),
+            dataTextStyle: const TextStyle(
+              color: Color(0xFF475569),
+              fontSize: 10,
+            ),
+            columns: [
+              DataColumn(label: Text(data['column1'])),
+              DataColumn(label: Text(data['column2'])),
+              DataColumn(label: Text(data['column3'])),
+              DataColumn(label: Text(data['column4'])),
+            ],
+            rows: rows.map<DataRow>((row) {
+              return DataRow(
+                cells: [
+                  DataCell(
+                    Text(row[0], maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ),
+                  DataCell(
+                    Text(row[1], maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ),
+                  DataCell(
+                    Text(row[2], maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ),
+                  DataCell(
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0FDF4),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        row[3],
+                        style: const TextStyle(
+                          color: Color(0xFF15803D),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _infoRow(String title, String value, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 11),
+      child: Row(
+        children: [
+          Icon(icon, color: const Color(0xFF64748B), size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: Color(0xFF64748B),
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Color(0xFF334155),
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _card({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Widget child,
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(21),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(.025),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: const Color(0xFF2563EB), size: 21),
-              const SizedBox(width: 9),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Color(0xFF172B4D),
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
+              Container(
+                width: 39,
+                height: 39,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(icon, color: const Color(0xFF64748B), size: 20),
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF172B4D),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF6B7280),
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          if (description.isNotEmpty) ...[
-            const SizedBox(height: 13),
-            Text(
-              description,
-              style: const TextStyle(
-                color: Color(0xFF64748B),
-                fontSize: 13,
-                height: 1.5,
-              ),
-            ),
-          ],
-          if (child != null) ...[const SizedBox(height: 16), child],
+          const SizedBox(height: 17),
+          child,
         ],
       ),
     );
   }
 
-  Widget _bullet(String text) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.check_circle, color: Color(0xFF2563EB), size: 17),
-          const SizedBox(width: 9),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                color: Color(0xFF475569),
-                fontSize: 12,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
+  Widget _divider() {
+    return const Divider(height: 1, color: Color(0xFFE5E7EB));
+  }
+
+  Map<String, dynamic> _defaultData(String title) {
+    return _buildData(
+      title: title,
+      icon: Icons.apps_outlined,
+      description: 'Enterprise service management, operational visibility and cloud platform controls.',
+      owner: 'Platform Operations',
+      environment: 'Production',
+      region: 'Asia Pacific',
+      version: 'v4.8.2',
+      deployment: 'Today, 08:42',
+      tableTitle: 'Service Components',
+      tableSubtitle: 'Active components and operational state',
+      column1: 'Component',
+      column2: 'Version',
+      column3: 'Load',
+      column4: 'Status',
     );
   }
 
-  Widget _notFound() {
-    return _descriptionCard(
-      'Page Not Found',
-      'The selected service could not be found.',
-      Icons.error_outline,
-    );
+  Map<String, dynamic> _buildData({
+    required String title,
+    required IconData icon,
+    required String description,
+    required String owner,
+    required String environment,
+    required String region,
+    required String version,
+    required String deployment,
+    required String tableTitle,
+    required String tableSubtitle,
+    required String column1,
+    required String column2,
+    required String column3,
+    required String column4,
+  }) {
+    return {
+      'title': title,
+      'icon': icon,
+      'description': description,
+      'status': 'Operational',
+      'availability': '99.99% availability',
+      'owner': owner,
+      'environment': environment,
+      'region': region,
+      'version': version,
+      'deployment': deployment,
+      'activity1': '$title health check completed',
+      'activity1Detail': 'All service components are operating normally',
+      'activity2': '$title deployment completed',
+      'activity2Detail':
+          'Latest production configuration deployed successfully',
+      'activity3': 'Security validation completed',
+      'activity3Detail': 'No critical security issues detected',
+      'activity4': 'Service configuration synchronized',
+      'activity4Detail': 'Enterprise configuration is up to date',
+      'activity5': 'Backup completed',
+      'activity5Detail': 'Scheduled service backup completed successfully',
+      'tableTitle': tableTitle,
+      'tableSubtitle': tableSubtitle,
+      'column1': column1,
+      'column2': column2,
+      'column3': column3,
+      'column4': column4,
+      'metrics': [
+        {
+          'title': 'Service Availability',
+          'value': '99.99%',
+          'change': '+0.02% this month',
+          'icon': Icons.check_circle_outline,
+        },
+        {
+          'title': 'Active Requests',
+          'value': '24.8K',
+          'change': '+8.4% today',
+          'icon': Icons.sync_outlined,
+        },
+        {
+          'title': 'Average Latency',
+          'value': '124 ms',
+          'change': '-8.2% today',
+          'icon': Icons.speed_outlined,
+        },
+        {
+          'title': 'Error Rate',
+          'value': '0.08%',
+          'change': '-0.03% today',
+          'icon': Icons.error_outline,
+        },
+      ],
+      'resources': [
+        {
+          'title': 'Application Instances',
+          'value': '24',
+          'status': 'All healthy',
+          'icon': Icons.dns_outlined,
+        },
+        {
+          'title': 'API Endpoints',
+          'value': '86',
+          'status': 'Operational',
+          'icon': Icons.api_outlined,
+        },
+        {
+          'title': 'Database Connections',
+          'value': '142',
+          'status': 'Healthy',
+          'icon': Icons.storage_outlined,
+        },
+        {
+          'title': 'Container Workloads',
+          'value': '38',
+          'status': 'Running',
+          'icon': Icons.view_in_ar_outlined,
+        },
+        {
+          'title': 'Background Jobs',
+          'value': '126',
+          'status': 'Scheduled',
+          'icon': Icons.schedule_outlined,
+        },
+        {
+          'title': 'Service Dependencies',
+          'value': '18',
+          'status': 'Available',
+          'icon': Icons.account_tree_outlined,
+        },
+      ],
+      'table': [
+        ['Primary Service', version, '42%', 'Healthy'],
+        ['API Gateway', 'v3.6.1', '38%', 'Healthy'],
+        ['Worker Cluster', 'v2.9.4', '61%', 'Healthy'],
+        ['Database Layer', 'v12.4', '57%', 'Healthy'],
+        ['Cache Layer', 'v7.2', '44%', 'Healthy'],
+      ],
+    };
   }
 
-  String _serviceDescription(String title) {
-    switch (title) {
-      case 'Platform Administration':
-        return 'Centralized administration of global platform settings, '
-            'tenants, licenses, features, resources and platform health.';
-
-      case 'HRMS':
-        return 'Enterprise workforce management covering employees, '
-            'attendance, leave, payroll, recruitment, performance and learning.';
-
-      case 'CRM':
-        return 'Customer relationship management covering leads, accounts, '
-            'contacts, opportunities, campaigns, quotations and support.';
-
-      case 'ERP':
-        return 'Enterprise resource planning covering inventory, procurement, '
-            'production, sales, dispatch, assets, maintenance and vendors.';
-
-      case 'Finance & Accounting':
-        return 'Financial operations covering ledgers, payables, receivables, '
-            'tax, budgeting, costing, reconciliation and financial reporting.';
-
-      case 'Workflow & Automation':
-        return 'Business process automation using workflows, approvals, '
-            'business rules, tasks, triggers and SLA management.';
-
-      case 'Documentation':
-        return 'Enterprise document lifecycle management covering storage, '
-            'versioning, access control, search, retention and audit trails.';
-
-      case 'Subscription':
-        return 'Subscription lifecycle management covering plans, features, '
-            'quotas, payments, licensing, renewals and billing integration.';
-
-      case 'Revenue':
-        return 'Revenue management covering tracking, forecasting, analytics, '
-            'recognition, commissions, invoicing and financial integrations.';
-
-      case 'Monitoring':
-        return 'Centralized observability for infrastructure, applications, '
-            'logs, metrics, alerts, incidents and uptime.';
-
-      case 'Storage':
-        return 'Enterprise data storage covering object, file and block storage, '
-            'backups, lifecycle policies, analytics and access management.';
-
-      default:
-        return 'Enterprise service management capabilities.';
-    }
-  }
-
-  String _moduleDescription(String title) {
-    final t = title.toLowerCase();
-
-    if (t.contains('employee')) {
-      return 'Centralizes employee master data, employment information, '
-          'organizational details and workforce records.';
-    }
-
-    if (t.contains('attendance')) {
-      return 'Manages employee attendance, working hours, shifts and attendance records.';
-    }
-
-    if (t == 'leave') {
-      return 'Manages leave requests, approvals, balances, policies and leave history.';
-    }
-
-    if (t.contains('payroll')) {
-      return 'Supports salary structures, payroll calculations, deductions, earnings and payslips.';
-    }
-
-    if (t.contains('recruitment')) {
-      return 'Manages job openings, candidates, interviews, selection stages and recruitment workflows.';
-    }
-
-    if (t.contains('performance')) {
-      return 'Supports employee goals, reviews, ratings, feedback and performance tracking.';
-    }
-
-    if (t.contains('learning')) {
-      return 'Manages training programs, courses, assignments and learning progress.';
-    }
-
-    if (t.contains('lead')) {
-      return 'Captures, qualifies and manages prospective customers through the sales lifecycle.';
-    }
-
-    if (t.contains('opportunit')) {
-      return 'Tracks sales opportunities, pipeline stages, values and expected outcomes.';
-    }
-
-    if (t.contains('account')) {
-      return 'Maintains customer account information, relationships and business activity.';
-    }
-
-    if (t.contains('contact')) {
-      return 'Centralizes customer contact information and communication relationships.';
-    }
-
-    if (t.contains('pipeline')) {
-      return 'Provides visual sales pipeline tracking across configurable business stages.';
-    }
-
-    if (t.contains('quotation')) {
-      return 'Supports quotation creation, pricing, approval and customer quotation tracking.';
-    }
-
-    if (t.contains('campaign')) {
-      return 'Manages marketing campaigns, target audiences, activities and campaign performance.';
-    }
-
-    if (t.contains('support')) {
-      return 'Manages customer support cases, assignments, priorities, SLAs and resolutions.';
-    }
-
-    if (t.contains('inventory')) {
-      return 'Provides stock visibility, warehouse information, inventory movements and availability.';
-    }
-
-    if (t.contains('procurement')) {
-      return 'Manages purchase requests, purchase orders, suppliers and procurement approvals.';
-    }
-
-    if (t.contains('production')) {
-      return 'Supports production planning, work orders, manufacturing activities and tracking.';
-    }
-
-    if (t.contains('sales order')) {
-      return 'Manages customer sales orders, fulfillment, status and transaction processing.';
-    }
-
-    if (t.contains('dispatch')) {
-      return 'Manages dispatch planning, shipments, deliveries and logistics information.';
-    }
-
-    if (t.contains('vendor')) {
-      return 'Centralizes supplier profiles, vendor information and vendor performance.';
-    }
-
-    if (t.contains('ledger')) {
-      return 'Manages journal entries, financial accounts, balances and ledger transactions.';
-    }
-
-    if (t.contains('payable')) {
-      return 'Manages supplier invoices, payable transactions and payment obligations.';
-    }
-
-    if (t.contains('receivable')) {
-      return 'Tracks customer invoices, outstanding balances, collections and receipts.';
-    }
-
-    if (t.contains('tax')) {
-      return 'Supports tax configuration, calculations, tax records and reporting.';
-    }
-
-    if (t.contains('budget')) {
-      return 'Provides budget planning, allocation, monitoring and variance analysis.';
-    }
-
-    if (t.contains('costing')) {
-      return 'Supports cost allocation, cost centers and enterprise costing analysis.';
-    }
-
-    if (t.contains('financial report')) {
-      return 'Provides financial statements, management reports and financial analytics.';
-    }
-
-    if (t.contains('reconciliation')) {
-      return 'Helps reconcile transactions, account balances and external financial records.';
-    }
-
-    if (t.contains('currency')) {
-      return 'Supports multiple currencies, exchange rates and international transactions.';
-    }
-
-    if (t.contains('workflow')) {
-      return 'Provides configurable workflow design, stages, actions and process routing.';
-    }
-
-    if (t.contains('approval')) {
-      return 'Manages approval chains, approvers, decisions, comments and approval status.';
-    }
-
-    if (t.contains('business rule')) {
-      return 'Provides configurable business logic, validations and conditional processing.';
-    }
-
-    if (t.contains('automation')) {
-      return 'Automates repetitive business processes using triggers, conditions and actions.';
-    }
-
-    if (t.contains('task')) {
-      return 'Provides task creation, assignment, priority, tracking and completion management.';
-    }
-
-    if (t.contains('trigger')) {
-      return 'Executes automated actions based on events, schedules or business conditions.';
-    }
-
-    if (t.contains('sla')) {
-      return 'Tracks service-level agreements, deadlines, escalations and response commitments.';
-    }
-
-    if (t.contains('document')) {
-      return 'Provides centralized enterprise document management and controlled access.';
-    }
-
-    if (t.contains('version')) {
-      return 'Maintains document versions, revisions and change history.';
-    }
-
-    if (t.contains('upload')) {
-      return 'Provides secure file upload and download with access and audit controls.';
-    }
-
-    if (t.contains('ocr')) {
-      return 'Supports document text extraction and searchable content using OCR integrations.';
-    }
-
-    if (t.contains('subscription')) {
-      return 'Manages tenant subscription status, lifecycle, plans and entitlements.';
-    }
-
-    if (t.contains('plan')) {
-      return 'Defines subscription plans, features, pricing and service entitlements.';
-    }
-
-    if (t.contains('quota')) {
-      return 'Tracks tenant usage against configured service limits and resource quotas.';
-    }
-
-    if (t.contains('payment')) {
-      return 'Tracks payment transactions, payment status and payment history.';
-    }
-
-    if (t.contains('renewal')) {
-      return 'Manages subscription renewals, dates, status and renewal workflows.';
-    }
-
-    if (t.contains('trial')) {
-      return 'Controls trial subscriptions, duration, limits and trial conversion.';
-    }
-
-    if (t.contains('revenue')) {
-      return 'Tracks revenue, revenue-related transactions and business performance.';
-    }
-
-    if (t.contains('forecast')) {
-      return 'Provides revenue forecasting based on historical and operational data.';
-    }
-
-    if (t.contains('commission')) {
-      return 'Manages commission rules, eligible transactions and commission calculations.';
-    }
-
-    if (t.contains('invoice')) {
-      return 'Supports invoice creation, billing information, status and transaction records.';
-    }
-
-    if (t.contains('health')) {
-      return 'Provides operational health visibility for services and infrastructure.';
-    }
-
-    if (t.contains('infrastructure')) {
-      return 'Monitors infrastructure resources, availability and utilization.';
-    }
-
-    if (t.contains('application')) {
-      return 'Tracks application performance, errors, availability and application signals.';
-    }
-
-    if (t.contains('log')) {
-      return 'Centralizes logs for searching, troubleshooting and operational analysis.';
-    }
-
-    if (t.contains('alert')) {
-      return 'Manages alert rules, severity, notification routing and operational response.';
-    }
-
-    if (t.contains('incident')) {
-      return 'Supports incident creation, assignment, prioritization, resolution and history.';
-    }
-
-    if (t.contains('uptime')) {
-      return 'Tracks service availability using configurable health checks and monitoring endpoints.';
-    }
-
-    if (t.contains('object storage')) {
-      return 'Provides scalable object storage for documents, media, backups and application data.';
-    }
-
-    if (t.contains('file storage')) {
-      return 'Provides shared file storage for enterprise workloads requiring file access.';
-    }
-
-    if (t.contains('block storage')) {
-      return 'Provides persistent block volumes for compute and application workloads.';
-    }
-
-    if (t.contains('bucket')) {
-      return 'Provides logical storage containers for organizing objects and permissions.';
-    }
-
-    if (t.contains('lifecycle')) {
-      return 'Automates storage transitions, archival, retention and deletion policies.';
-    }
-
-    if (t.contains('backup')) {
-      return 'Provides backup creation, retention, recovery and restore capabilities.';
-    }
-
-    if (t.contains('storage analytics')) {
-      return 'Provides storage utilization, capacity, growth and usage analytics.';
-    }
-
-    return 'Provides centralized enterprise management capabilities for $title.';
-  }
-
-  List<String> _capabilities(String title) {
-    final t = title.toLowerCase();
-
-    if (t.contains('monitor') || t.contains('health') || t.contains('uptime')) {
-      return [
-        'Operational health visibility',
-        'Metrics and monitoring signals',
-        'Alerts and incident workflows',
-        'Availability and performance analysis',
-      ];
-    }
-
-    if (t.contains('storage') || t.contains('backup') || t.contains('bucket')) {
-      return [
-        'Secure data storage',
-        'Role-based access control',
-        'Backup and recovery',
-        'Lifecycle management',
-      ];
-    }
-
-    if (t.contains('workflow') ||
-        t.contains('approval') ||
-        t.contains('automation') ||
-        t.contains('task')) {
-      return [
-        'Configurable business processes',
-        'Approval and task routing',
-        'Rules and automated actions',
-        'Process tracking and auditability',
-      ];
-    }
-
-    if (t.contains('finance') ||
-        t.contains('ledger') ||
-        t.contains('payment') ||
-        t.contains('revenue')) {
-      return [
-        'Transaction management',
-        'Financial controls',
-        'Reporting and analytics',
-        'Enterprise integrations',
-      ];
-    }
-
-    return [
-      'Centralized enterprise data management',
-      'Role-based access control',
-      'API integration readiness',
-      'Audit and operational visibility',
-    ];
-  }
-
-  List<String> _cloudItems(String service) {
-    final s = service.toLowerCase();
-
-    if (s.contains('monitoring')) {
-      return [
-        'Metrics',
-        'Logs',
-        'Alerts',
-        'Health Checks',
-        'Dashboards',
-        'Incident Tracking',
-      ];
-    }
-
-    if (s.contains('storage')) {
-      return [
-        'Object Storage',
-        'File Storage',
-        'Block Storage',
-        'Backup',
-        'Encryption',
-        'Lifecycle Management',
-      ];
-    }
-
-    if (s.contains('finance') ||
-        s.contains('revenue') ||
-        s.contains('subscription')) {
-      return [
-        'Managed Database',
-        'Secure APIs',
-        'Audit Logs',
-        'Encryption',
-        'Analytics',
-        'Integration',
-      ];
-    }
-
-    return [
-      'Managed Database',
-      'Identity & RBAC',
-      'API Gateway',
-      'Object Storage',
+  static final Map<String, Map<String, dynamic>> _serviceData = {
+    'Platform Administration': _staticData(
+      'Platform Administration',
+      Icons.admin_panel_settings_outlined,
+      'Central administration for enterprise users, policies, configuration and platform governance.',
+      'Platform Engineering',
+      'Global',
+    ),
+    'HRMS': _staticData(
+      'HRMS',
+      Icons.badge_outlined,
+      'Enterprise human resource management covering employee operations, workforce data and organizational administration.',
+      'Human Resources',
+      'Asia Pacific',
+    ),
+    'CRM': _staticData(
+      'CRM',
+      Icons.people_alt_outlined,
+      'Customer relationship management covering accounts, contacts, opportunities, pipelines and customer engagement.',
+      'Sales Operations',
+      'Global',
+    ),
+    'ERP': _staticData(
+      'ERP',
+      Icons.business_center_outlined,
+      'Enterprise resource planning platform for finance, procurement, operations, inventory and organizational workflows.',
+      'Enterprise Operations',
+      'Global',
+    ),
+    'Finance & Accounting': _staticData(
+      'Finance & Accounting',
+      Icons.account_balance_outlined,
+      'Financial operations platform for accounting, transactions, reconciliation, reporting and financial controls.',
+      'Finance Operations',
+      'Asia Pacific',
+    ),
+    'Workflow & Automation': _staticData(
+      'Workflow & Automation',
+      Icons.account_tree_outlined,
+      'Enterprise workflow orchestration for approvals, business processes, scheduled jobs and automated operations.',
+      'Automation Engineering',
+      'Global',
+    ),
+    'Documentation': _staticData(
+      'Documentation',
+      Icons.menu_book_outlined,
+      'Central enterprise knowledge platform for documentation, policies, technical references and operational guides.',
+      'Knowledge Management',
+      'Global',
+    ),
+    'Subscription': _staticData(
+      'Subscription',
+      Icons.subscriptions_outlined,
+      'Subscription lifecycle management for plans, accounts, renewals, billing cycles and customer entitlements.',
+      'Revenue Operations',
+      'Global',
+    ),
+    'Revenue': _staticData(
+      'Revenue',
+      Icons.trending_up_outlined,
+      'Revenue intelligence platform covering financial performance, recurring revenue and commercial metrics.',
+      'Revenue Operations',
+      'Global',
+    ),
+    'Monitoring': _staticData(
       'Monitoring',
-      'Audit Logs',
-    ];
+      Icons.monitor_heart_outlined,
+      'Unified observability platform for application health, infrastructure metrics, logs, alerts and incidents.',
+      'Site Reliability Engineering',
+      'Global',
+    ),
+    'Storage': _staticData(
+      'Storage',
+      Icons.storage_outlined,
+      'Enterprise cloud storage platform for application data, objects, backups and long-term retention.',
+      'Cloud Infrastructure',
+      'Asia Pacific',
+    ),
+    'Identity & Access': _staticData(
+      'Identity & Access',
+      Icons.manage_accounts_outlined,
+      'Centralized identity, authentication, authorization, role management and enterprise access governance.',
+      'Security Engineering',
+      'Global',
+    ),
+  };
+
+  static Map<String, dynamic> _staticData(
+    String title,
+    IconData icon,
+    String description,
+    String owner,
+    String region,
+  ) {
+    final page = ServiceContentPage(page: title);
+
+    return page._buildData(
+      title: title,
+      icon: icon,
+      description: description,
+      owner: owner,
+      environment: 'Production',
+      region: region,
+      version: 'v4.8.2',
+      deployment: 'Today, 08:42',
+      tableTitle: '$title Components',
+      tableSubtitle: 'Active resources and service components',
+      column1: 'Component',
+      column2: 'Version',
+      column3: 'Utilization',
+      column4: 'Status',
+    );
   }
 }

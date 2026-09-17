@@ -15,7 +15,7 @@ class _TwoStepPageState extends State<TwoStepPage> {
 
   bool isLoading = false;
 
-  static const String correctOtp = '278989';
+  static const String correctOtp = '123456';
 
   @override
   void dispose() {
@@ -54,7 +54,7 @@ class _TwoStepPageState extends State<TwoStepPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: Color(0xFFDC2626),
-          content: Text('Invalid OTP. Demo OTP: 278989'),
+          content: Text('Invalid OTP. Demo OTP: 123456'),
         ),
       );
     }
